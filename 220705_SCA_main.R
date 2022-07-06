@@ -68,4 +68,38 @@ dat %>%
 
 # Discard short tracks ----------------------------------------------------
 
+## Overview ----
 
+# Find lengths of tracks
+dat_l <- dat %>% 
+  unnest(data) %>% 
+  group_nest(dataset, img_id, cell_id) %>% 
+  mutate(l = map_int(data, ~dim(.)[[1]]))
+
+
+# How are the track lengths distributed?
+ggplot(dat_l, aes(l, group = dataset)) +
+  geom_density() +
+  facet_wrap(~dataset)
+
+
+# What are the most prevalent track lengths above 600?
+dat_l %>% 
+  group_by(dataset) %>% 
+  count(l) %>% 
+  filter(l > 600) %>% 
+  arrange(desc(l)) %>% 
+  print(n = nrow(.))
+
+
+## Discard short tracks ----
+
+dat_l %>% 
+  filter(l %in% 610:620) %>% 
+  select(-l) %>% 
+  
+  
+
+
+
+ggplot(dat_ds, aes(time, calcium, group = condition, color = condition))
