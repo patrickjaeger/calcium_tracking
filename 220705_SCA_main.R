@@ -17,12 +17,12 @@ source("SCA/20_tidy_data.R")
 out_path <- "data/220705_LOX_KO_data_ALL/"
 # dir.create(out_path)
 
-# raw_data <- list(
-#   "D:/iMic/211205_pat_KO1/res",
-#   "D:/iMic/211222_pat_ko2/res",
-#   "D:/iMic/220620_pat_ko4/res",
-#   "D:/iMic/220704_pat_ko5/res"
-# )
+raw_data <- list(
+  "D:/iMic/211205_pat_KO1/res",
+  "D:/iMic/211222_pat_ko2/res",
+  "D:/iMic/220620_pat_ko4/res",
+  "D:/iMic/220704_pat_ko5/res"
+)
 
 tidy_data_filenames <- list(
   "ko1.csv",
@@ -33,13 +33,13 @@ tidy_data_filenames <- list(
 
 full_out_path <- paste0(out_path, tidy_data_filenames)
 
-# for (i in 1:length(raw_data)) {
-#   path <- raw_data[[i]]
-#   filename <- full_out_path[[i]]
-# 
-#   discard_trash_and_save_tidy_data(path, filename, .bl = 10, .fps = 4)
-#   print(paste("file", i, "saved"))
-# }
+for (i in 1:length(raw_data)) {
+  path <- raw_data[[i]]
+  filename <- full_out_path[[i]]
+
+  discard_trash_and_save_tidy_data(path, filename, .bl = 10, .fps = 4)
+  print(paste("file", i, "saved"))
+}
 
 
 # Import tidy data --------------------------------------------------------
@@ -53,15 +53,15 @@ dat$data <- map(tidy_files, read_csv)
 
 
 # Renest data and tidy up names
-dat <- dat %>%
+datt <- dat %>%
   unnest(data) %>%
   group_nest(across(1:10)) %>%
   tidy_conditions()
 
-print(dat, n = nrow(dat))
+print(datt, n = nrow(datt))
 
 # Condition overview
-dat %>% 
+datt %>% 
   group_by(dataset, condition) %>% 
   summarise(n = n())
 
@@ -71,7 +71,7 @@ dat %>%
 ## Overview ----
 
 # Find lengths of tracks
-dat_l <- dat %>% 
+dat_l <- datt %>% 
   unnest(data) %>% 
   group_nest(dataset, img_id, cell_id) %>% 
   mutate(l = map_int(data, ~dim(.)[[1]]))
@@ -94,12 +94,24 @@ dat_l %>%
 
 ## Discard short tracks ----
 
-dat_l %>% 
+dat_f <- dat_l %>% 
   filter(l %in% 610:620) %>% 
-  select(-l) %>% 
+  select(-l)
   
-  
+
+# Normalize signal --------------------------------------------------------
+
+dat <- mutate(dat_f, data = map(data, ~reformat_signal(., .bl = 10, .fps = 4)))
 
 
+## Save data ----
 
-ggplot(dat_ds, aes(time, calcium, group = condition, color = condition))
+dat <- unnest(dat, data) %>% 
+  group_nest(dataset, date, img_id, donor, passage, 
+             day, condition, strain_rate, max_strain, sample)
+
+
+# Load data ---------------------------------------------------------------
+
+save(dat, file = "data/220706_LOX_data.RData")
+

@@ -23,3 +23,25 @@ tidy_conditions <- function(.df) {
     return(data)
   }
 }
+
+
+reformat_signal <- function(.df, .bl, .fps) {
+  # normalize signal and convert frame to time
+  # .bl (double): duration of baseline [sec]
+  # .fps (double): frames per second
+  
+  bl_end <- .bl*.fps
+  
+  bl_mean <- filter(.df, frame < bl_end) %>% 
+    pluck("calcium_raw") %>% 
+    mean()
+  
+  .df %>% 
+    # group_by(cell_id) %>%
+    # na.omit() %>% 
+    mutate(calcium = calcium_raw/bl_mean) %>%
+    ungroup() %>% 
+    rename(time = frame) %>% 
+    mutate(time = time/.fps) %>%  # [time] = seconds
+    select(-calcium_raw)
+}

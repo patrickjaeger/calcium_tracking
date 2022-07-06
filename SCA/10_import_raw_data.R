@@ -24,7 +24,7 @@ discard_trash_and_save_tidy_data <- function(.dir, .out_path, .bl, .fps) {
   
   read_csv_plus(.dir) %>% 
     mutate(data = map(data, ~trash_and_rename(.))) %>% 
-    mutate(data = map(data, ~reformat_signal(., .bl = .bl, .fps = .fps))) %>% 
+    # mutate(data = map(data, ~reformat_signal(., .bl = .bl, .fps = .fps))) %>% 
     unnest(cols = data) %>% 
     write_csv(., .out_path)
 }
@@ -60,23 +60,6 @@ trash_and_rename <- function(.df) {
     rename(cell_id = TRACK_ID, calcium_raw = MEAN_INTENSITY02, frame = FRAME)
 }
 
-reformat_signal <- function(.df, .bl, .fps) {
-  # normalize signal and convert frame to time
-  # .bl (double): duration of baseline [sec]
-  # .fps (double): frames per second
-  
-  bl_end <- .bl*.fps
-  
-  .df %>% 
-    group_by(cell_id) %>%
-    # Normalize calcium signal
-    na.omit() %>% 
-    mutate(calcium = calcium_raw/mean(calcium_raw[1:bl_end])) %>%
-    ungroup() %>% 
-    rename(time = frame) %>% 
-    mutate(time = time/.fps) %>%  # [time] = seconds
-    select(-calcium_raw)
-}
 
 
 # Test code ---------------------------------------------------------------
