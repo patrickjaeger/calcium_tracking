@@ -9,6 +9,7 @@
 
 library(tidyverse)
 source("SCA/10_import_raw_data.R")
+source("SCA/20_tidy_data.R")
 
 
 # Tidy raw data -----------------------------------------------------------
@@ -16,12 +17,12 @@ source("SCA/10_import_raw_data.R")
 out_path <- "data/220705_LOX_KO_data_ALL/"
 # dir.create(out_path)
 
-raw_data <- list(
-  "D:/iMic/211205_pat_KO1/res",
-  "D:/iMic/211222_pat_ko2/res",
-  "D:/iMic/220620_pat_ko4/res",
-  "D:/iMic/220704_pat_ko5/res"
-)
+# raw_data <- list(
+#   "D:/iMic/211205_pat_KO1/res",
+#   "D:/iMic/211222_pat_ko2/res",
+#   "D:/iMic/220620_pat_ko4/res",
+#   "D:/iMic/220704_pat_ko5/res"
+# )
 
 tidy_data_filenames <- list(
   "ko1.csv",
@@ -34,9 +35,37 @@ full_out_path <- paste0(out_path, tidy_data_filenames)
 
 # for (i in 1:length(raw_data)) {
 #   path <- raw_data[[i]]
-#   filename <- tidy_data_file_names[[i]]
-#   
+#   filename <- full_out_path[[i]]
+# 
 #   discard_trash_and_save_tidy_data(path, filename, .bl = 10, .fps = 4)
 #   print(paste("file", i, "saved"))
 # }
+
+
+# Import tidy data --------------------------------------------------------
+
+tidy_files <- list.files("data/220705_LOX_KO_data_ALL/", 
+                         pattern = ".csv",
+                         full.names = TRUE)
+
+dat <- tibble(dataset = str_remove(tidy_data_filenames, ".csv"))
+dat$data <- map(tidy_files, read_csv)
+
+
+# Renest data and tidy up names
+dat <- dat %>%
+  unnest(data) %>%
+  group_nest(across(1:10)) %>%
+  tidy_conditions()
+
+print(dat, n = nrow(dat))
+
+# Condition overview
+dat %>% 
+  group_by(dataset, condition) %>% 
+  summarise(n = n())
+
+
+# Discard short tracks ----------------------------------------------------
+
 
