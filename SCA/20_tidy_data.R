@@ -26,9 +26,13 @@ tidy_conditions <- function(.df) {
 
 
 reformat_signal <- function(.df, .bl, .fps) {
-  # normalize signal and convert frame to time
+  # Normalize signal and convert frame to time
+  # Since not all cells have the same number of datapoints (+-5%),
+  # whatever number of datapoints below the end of the baseline is used to 
+  # calculate the baseline intensity: +- 5 frames don't make a difference.
+  
   # .bl (double): duration of baseline [sec]
-  # .fps (double): frames per second
+  # .fps (double): frames per second [n]
   
   bl_end <- .bl*.fps
   
