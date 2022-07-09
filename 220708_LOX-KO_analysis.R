@@ -31,13 +31,30 @@ ggplot(datca, aes(first_peak,
   theme(legend.position = 'top')
 
 
-find_threshold <- function(.dat, .strain_rate = 0.5) {
-  
-  .dat %>% 
+find_threshold <- function(.datca, .strain_rate = 0.5) {
+  # Calculate the threshold in strain
+  # .datca (tbl): output from cum_activity()
+  # .strain_rate (dbl): strain rate [%/s]
+  .datca %>% 
     group_by(dataset, condition, img_id) %>% 
     filter(n_cells_norm_cum_activity >= 0.495) %>% 
     arrange(n_cells_norm_cum_activity) %>%  # what is this?
     slice(1) %>% 
     mutate(strain = (first_peak-10)*.strain_rate)
 }
-datc %>% slice(1) %>% find_threshold()
+
+datt <- find_threshold(datca)
+
+datp <- filter(datt, dataset == "ko1")
+
+ggplot(datp, aes(condition, strain, color = condition)) +
+  stat_summary(geom = 'bar', cex = 0.9, alpha = 0.4, show.legend = F, 
+               width = 0.7, fill = NA) +
+  stat_summary(geom = 'errorbar', width = 0.5, cex = 0.9, show.legend = F) +
+  geom_jitter(width = 0.07, show.legend = F, pch = 1, cex = 2) +
+  # scale_color_manual(values = nice_colors) +
+  # scale_fill_manual(values = nice_colors) +
+  theme_classic() +
+  labs(x = NULL, y = 'Activation thresh. in strain [%]') +
+  # scale_y_continuous(expand = c(0,0), breaks = c(0, 50, 100), limits = c(0, 100)) +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust=1))
