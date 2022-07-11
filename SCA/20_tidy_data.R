@@ -14,6 +14,8 @@ tidy_conditions <- function(.df) {
       condition == "LOXL2-KO" ~ "LOXL2 KO",
       condition == "LOXL2-KI" ~ "LOXL2 plasmid",
       condition == "NOT-PERP" ~ "NOT-PERP",
+      condition == "LOXL2-KO-NO-GROOVES" ~ "LOXL2 KO TC-G",
+      condition == "LOXL2-KO-GROOVES" ~ "LOXL2 KO TC+G",
       TRUE ~ "missing"
     ))
   
