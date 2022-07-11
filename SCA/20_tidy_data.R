@@ -13,12 +13,12 @@ tidy_conditions <- function(.df) {
       condition == "LOXL2" ~ "LOXL2 KO",
       condition == "LOXL2-KO" ~ "LOXL2 KO",
       condition == "LOXL2-KI" ~ "LOXL2 plasmid",
-      condition == "LOXL2-KI" ~ "LOXL2 plasmid",
+      condition == "NOT-PERP" ~ "NOT-PERP",
       TRUE ~ "missing"
     ))
   
   if ("missing" %in% data$condition) {
-    stop("ERROR: missing conditions")
+    stop("Missing condition transformation in tidy_conditions()")
   } else {
     return(data)
   }
