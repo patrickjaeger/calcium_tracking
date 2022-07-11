@@ -19,7 +19,7 @@ raw_data <- list(
 )
 
 tidy_data_filenames <- list(
-  "ko5.1.csv",
+  "ko5tc.csv",
   "ko6.csv"
 )
 
@@ -38,12 +38,15 @@ for (i in 1:length(raw_data)) {
 
 tidy_files <- list.files("data/220705_LOX_KO_data_ALL/", 
                          pattern = ".csv",
-                         full.names = TRUE)[c(5, 6)]
+                         full.names = TRUE) %>% 
+  .[str_detect(., c("ko5tc", "ko6"))]
 
 dat <- tibble(dataset = str_remove(tidy_data_filenames, ".csv"))
 dat$data <- map(tidy_files, read_csv)
 
 # Renest data and tidy up names
+unnest(dat, data) %>% pluck("condition") %>% unique()
+
 datt <- dat %>%
   unnest(data) %>%
   group_nest(across(1:10)) %>%
@@ -69,29 +72,14 @@ dat_l <- datt %>%
 
 
 # How are the track lengths distributed?
-# ggplot(dat_l, aes(l, group = dataset)) +
-#   geom_density() +
-#   facet_wrap(~dataset)
+dat_l %>% filter(dataset == "ko5tc", img_id %in% c(1, 14)) %>% 
+ggplot(aes(l, group = dataset)) +
+  geom_freqpoly() +
+  facet_wrap(~dataset)
 
 
 ## Find most prevalent track length (per sample) ----
-find_most_prevalent_length <- function(.x) {
-  # Find the most prevalent number in a vector
-  
-  max_length <- max(.x)
-  x_reasonable <- .x[.x > max(.x)*0.5]
-  counts_table <- table(.x)
-  
-  # Some samples have a huge number of super short tracks, e.g. 2, and some
-  # samples end sooner than 620, or the tissue tears at an early timepoint.
-  # This removes too short tracks while considering the total video duration.
-  # counts_table <- counts_table[counts_table > 0.5*max_length]
-  
-  max_count <- counts_table[counts_table == max(counts_table)]
-  
-  # Return the longest of the max. counts
-  max(as.integer(names(max_count)))[[1]]
-}
+
 
 dat_l2 <- dat_l %>% 
   select(-data) %>% 
@@ -111,12 +99,6 @@ dat2 <- dat_l %>%
 
 ## Discard invalid track lengths ----
 
-get_valid_lengths <- function(.most) {
-  # Get valid track lengths based on most prevalent track length
-  limits <- c(round(.most-0.05*.most), round(.most+0.05*.most))
-  limits[1]:limits[2]
-}
-
 dat_f <- dat2 %>% 
   mutate(data, data = map2(data, 
                            most, 
@@ -130,6 +112,9 @@ dat_f <- dat2 %>%
 ## Assign FPS ----
 dat_f$fps <- 4
 
+## Remove sample 1 because it's weird
+dat_f <- dat_f[-1, ]
+
 ## Normalize calcium signal and convert frame to time ----
 dat <- dat_f %>% 
   select(-most) %>% 
@@ -137,7 +122,6 @@ dat <- dat_f %>%
   group_nest(dataset, date, img_id, donor, passage, 
              day, condition, strain_rate, max_strain, sample, cell_id, fps) %>% 
   mutate(data = map2(data, fps, ~reformat_signal(.x, .bl = 10, .fps = .y)))
-
 
 # Renest data into samples ----
 dat <- dat %>% 
