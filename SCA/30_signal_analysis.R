@@ -68,3 +68,16 @@ cum_activity <- function(.dat) {
            norm_cum_activity = cum_activity/max(cum_activity),
            n_cells_norm_cum_activity = cum_activity/max(n_cells))
 }
+
+
+find_threshold <- function(.datca, .strain_rate = 0.5) {
+  # Calculate the threshold in strain
+  # .datca (tbl): output from cum_activity()
+  # .strain_rate (dbl): strain rate [%/s]
+  .datca %>% 
+    group_by(dataset, condition, img_id) %>% 
+    filter(n_cells_norm_cum_activity >= 0.495) %>% 
+    arrange(n_cells_norm_cum_activity) %>%  # what is this?
+    slice(1) %>% 
+    mutate(strain = (first_peak-10)*.strain_rate)
+}
