@@ -67,8 +67,8 @@ find_most_prevalent_length <- function(.x) {
   # Find the most prevalent number in a vector
   
   max_length <- max(.x)
-  x_reasonable <- .x[.x > max(.x)*0.5]
-  counts_table <- table(.x)
+  x_reasonable <- .x[.x > max_length*0.5]
+  counts_table <- table(x_reasonable)
   
   # Some samples have a huge number of super short tracks, e.g. 2, and some
   # samples end sooner than 620, or the tissue tears at an early timepoint.
