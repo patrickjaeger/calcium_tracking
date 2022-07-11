@@ -59,25 +59,27 @@ cum_activity <- function(.dat) {
     slice(1) %>% 
     
     # Count the number of active cells per timepoint (that has active cells)
-    group_by(dataset, condition, img_id, first_peak, n_cells) %>% 
+    group_by(dataset, condition, img_id, first_peak, n_cells, strain_rate) %>% 
     summarise(n_active = n(), .groups = "drop") %>% 
     
     # Calculate the cumulative cell activity
-    group_by(dataset, condition, img_id) %>% 
+    group_by(dataset, condition, img_id, strain_rate) %>% 
     mutate(cum_activity = cumsum(n_active),
            norm_cum_activity = cum_activity/max(cum_activity),
            n_cells_norm_cum_activity = cum_activity/max(n_cells))
 }
 
 
-find_threshold <- function(.datca, .strain_rate = 0.5) {
+find_threshold <- function(.datca) {
   # Calculate the threshold in strain
   # .datca (tbl): output from cum_activity()
   # .strain_rate (dbl): strain rate [%/s]
   .datca %>% 
     group_by(dataset, condition, img_id) %>% 
     filter(n_cells_norm_cum_activity >= 0.495) %>% 
-    arrange(n_cells_norm_cum_activity) %>%  # what is this?
+    arrange(n_cells_norm_cum_activity) %>%  # **
     slice(1) %>% 
-    mutate(strain = (first_peak-10)*.strain_rate)
+    mutate(strain = (first_peak-10)*strain_rate)
+  
+  # ** extract the first datapoint after the 0.495 are surpassed
 }
