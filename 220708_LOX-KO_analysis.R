@@ -6,6 +6,11 @@ load("data/220709_LOX_KO_5.1_6.RData")
 dat_all <- bind_rows(dat1245, dat_5.1_6)
 rm(dat1245, dat_5.1_6)
 
+
+# Remove broken samples ---------------------------------------------------
+dat_all <- filter(dat_all, dataset != "ko5tc" & strain_rate != 1)
+
+
 # TODO Check threshold setting: 1.1?
 # TODO signal amplitude, duration, influx velocity
 
@@ -13,7 +18,17 @@ rm(dat1245, dat_5.1_6)
 # Classify active/inactive cells ------------------------------------------
 ## How to set the activation threshold?
 
+dat_all$condition <- as_factor(dat_all$condition) %>%
+  fct_relevel("WT",
+              "noTarget",
+              "LOXL1g1 KO",
+              "LOXL1g2 KO",
+              "LOXL2 KO",
+              "LOXL2 plasmid",
+              "LOXL3 KO",
+              "VHL KO")
 datc <- classify_signals(dat_all, .thresh = 1.05)
+
 
 
 # Cumulative activity -----------------------------------------------------
@@ -49,17 +64,16 @@ ggplot(datp1, aes(first_peak,
 datp2 <- filter(datt, dataset == target_dataset)
 datp2 <- filter(datt, condition %in% target_conditions)
 
-datp2$condition <- as_factor(datp2$condition) %>%
-  fct_relevel("WT", "noTarget", "LOXL2 KO", "LOXL2 plasmid")
+# datp2$condition <- as_factor(datp2$condition) %>%
+#   fct_relevel("WT", "noTarget", "LOXL2 KO", "LOXL2 plasmid")
 better_colors <- c("black", "grey50", "darkred", "dodgerblue")
 
-ggplot(datt, aes(condition, strain, color = condition)) +
+p1 <- ggplot(datp2, aes(condition, strain, color = condition)) +
   stat_summary(geom = 'bar', cex = 0.9, alpha = 0.4, show.legend = F, 
                width = 0.7, fill = NA) +
   stat_summary(geom = 'errorbar', width = 0.5, cex = 0.9, show.legend = F) +
   geom_jitter(width = 0.07, show.legend = F, pch = 1, cex = 2) +
-  # scale_color_manual(values = better_colors) +
-  # scale_fill_manual(values = nice_colors) +
+  scale_color_manual(values = better_colors) +
   theme_classic() +
   labs(x = NULL, y = 'Activation thresh. in strain [%]') +
   scale_y_continuous(expand = c(0,0)) +
@@ -68,7 +82,7 @@ ggplot(datt, aes(condition, strain, color = condition)) +
   # facet_wrap(~dataset)
 
 datt %>% 
-  group_by(condition, img_id) %>% 
+  group_by(condition) %>% 
   summarise(n = n(),
             mean_thresh = mean(strain),
             sd_thresh = sd(strain)) %>% print(n = nrow(.))
@@ -76,7 +90,7 @@ datt %>%
 
 # Cell count --------------------------------------------------------------
 
-ggplot(datp2, aes(condition, n_cells, color = condition)) +
+p2 <- ggplot(datp2, aes(condition, n_cells, color = condition)) +
   stat_summary(geom = 'bar', cex = 0.9, alpha = 0.4, show.legend = F, 
                width = 0.7, fill = NA) +
   stat_summary(geom = 'errorbar', width = 0.5, cex = 0.9, show.legend = F) +
@@ -85,15 +99,21 @@ ggplot(datp2, aes(condition, n_cells, color = condition)) +
   scale_color_manual(values = better_colors) +
   scale_y_continuous(expand = c(0,0)) +
   labs(x = NULL, y = '# of cells [n]') +
-  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust=1)) +
-  facet_wrap(~dataset)
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust=1))
+  # facet_wrap(~dataset)
 
 
 # cor(threshold, n_cells)? ------------------------------------------------
 
-# ggpubr::ggarrange(p1,p2)
+ggpubr::ggarrange(p1,p2)
 # 
 # dattwt <- filter(datt, condition == "noTarget")
 # qplot(dattwt$n_cells, dattwt$strain)
 # qplot(datt$n_cells, datt$strain, color = datt$condition)
 # cor(dattwt$n_cells, dattwt$strain)
+
+
+cor(datp2$n_cells, datp2$strain)
+qplot(datp2$n_cells, datp2$strain, color = datp2$condition) +
+  scale_color_manual(values = better_colors)
+  
