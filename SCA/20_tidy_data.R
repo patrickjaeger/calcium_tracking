@@ -16,6 +16,12 @@ tidy_conditions <- function(.df) {
       condition == "NOT-PERP" ~ "NOT-PERP",
       condition == "LOXL2-KO-NO-GROOVES" ~ "LOXL2 KO TC-G",
       condition == "LOXL2-KO-GROOVES" ~ "LOXL2 KO TC+G",
+      condition == "NOT-8K" ~ "noTarget 8k",
+      condition == "NOT-10K" ~ "noTarget 10k",
+      condition == "NOT-12K" ~ "noTarget 12k",
+      condition == "LOXL2-8K" ~ "LOXL2 KO 8k",
+      condition == "LOXL2-10K" ~ "LOXL2 KO 10k",
+      condition == "LOXL2-12K" ~ "LOXL2 KO 12k",
       TRUE ~ "missing"
     ))
   
