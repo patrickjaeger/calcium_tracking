@@ -55,11 +55,11 @@ cum_activity <- function(.dat) {
     filter(first_peak != Inf) %>%
     
     # Retain only one row per cell; we only need the first_peak value
-    group_by(dataset, condition, img_id, cell_id, n_cells) %>% 
+    group_by(dataset, condition, img_id, sample, cell_id, n_cells) %>% 
     slice(1) %>% 
     
     # Count the number of active cells per timepoint (that has active cells)
-    group_by(dataset, condition, img_id, first_peak, n_cells, strain_rate) %>% 
+    group_by(dataset, condition, img_id, sample, first_peak, n_cells, strain_rate) %>% 
     summarise(n_active = n(), .groups = "drop") %>% 
     
     # Calculate the cumulative cell activity
