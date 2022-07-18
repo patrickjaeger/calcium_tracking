@@ -28,7 +28,7 @@ for (i = 0; i < lengthOf(files); i++) {
 	run("Bio-Formats Importer", 
 	"open=" + input + File.separator + files[i] + 
 	" color_mode=Default rois_import=[ROI manager] specify_range" +
-	" view=Hyperstack stack_order=XYCZT t_step=12");
+	" view=Hyperstack stack_order=XYCZT t_step=16");
 
 	run("Split Channels");
 	close("C1*");
